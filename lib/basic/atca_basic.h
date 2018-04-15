@@ -59,9 +59,11 @@ extern ATCADevice _gDevice;
 
 // Basic global methods
 CRYPTOAUTHLIB_API ATCA_STATUS atcab_version(char *ver_str);
+CRYPTOAUTHLIB_API ATCA_STATUS atcab_static_init(ATCAIfaceCfg *cfg, ATCADevice dev, ATCACommand cmd, ATCAIface iface);
 CRYPTOAUTHLIB_API ATCA_STATUS atcab_init(ATCAIfaceCfg *cfg);
 CRYPTOAUTHLIB_API ATCA_STATUS atcab_init_device(ATCADevice ca_device);
 CRYPTOAUTHLIB_API ATCA_STATUS atcab_release(void);
+CRYPTOAUTHLIB_API ATCA_STATUS atcab_static_release(void);
 CRYPTOAUTHLIB_API ATCADevice atcab_get_device(void);
 CRYPTOAUTHLIB_API ATCA_STATUS _atcab_exit(void);
 CRYPTOAUTHLIB_API ATCA_STATUS atcab_wakeup(void);

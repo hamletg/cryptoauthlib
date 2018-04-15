@@ -55,6 +55,50 @@ ATCA_STATUS atcab_version(char *ver_str)
     return ATCA_SUCCESS;
 }
 
+ATCA_STATUS atcab_static_init(ATCAIfaceCfg *cfg, ATCADevice dev, ATCACommand cmd, ATCAIface iface)
+{
+    ATCA_STATUS status = ATCA_GEN_FAIL;
+
+    if (_gDevice)       // if there's already a device created, release it
+    {
+        atcab_static_release();
+    }
+
+    _gDevice = dev;
+    _gDevice->mCommands = cmd;
+    _gDevice->mIface = iface;
+
+    _gDevice->mCommands->dt = cfg->devtype;
+    _gDevice->mCommands->clock_divider = 0;
+
+    _gDevice->mIface = iface;
+    _gDevice->mIface->mType = cfg->iface_type;
+    _gDevice->mIface->mIfaceCFG = cfg;
+
+    status=atinit(_gDevice->mIface);
+    if (status != ATCA_SUCCESS)
+    {
+        _gDevice->mIface = NULL;
+        return status;
+    }
+
+    if ((_gDevice == NULL) || (_gDevice->mIface == NULL) || (_gDevice->mCommands == NULL))
+    {
+        return ATCA_GEN_FAIL;  // Device creation failed
+    }
+
+    if (cfg->devtype == ATECC608A)
+    {
+        if ((status = atcab_read_bytes_zone(ATCA_ZONE_CONFIG, 0, ATCA_CHIPMODE_OFFSET, &_gDevice->mCommands->clock_divider, 1)) != ATCA_SUCCESS)
+        {
+            return status;
+        }
+        _gDevice->mCommands->clock_divider &= ATCA_CHIPMODE_CLOCK_DIV_MASK;
+    }
+
+    return ATCA_SUCCESS;
+
+}
 
 /** \brief atcab_init is called once for the life of the application and creates a global ATCADevice object used by Basic API.
  *  This method builds a global ATCADevice instance behinds the scenes that's used for all Basic API operations
@@ -115,6 +159,12 @@ ATCA_STATUS atcab_init_device(ATCADevice ca_device)
 
     _gDevice = ca_device;
 
+    return ATCA_SUCCESS;
+}
+
+ATCA_STATUS atcab_static_release(void)
+{
+    _gDevice = NULL;
     return ATCA_SUCCESS;
 }
 
@@ -345,37 +395,51 @@ ATCA_STATUS atcab_get_zone_size(uint8_t zone, uint16_t slot, size_t* size)
     {
         switch (zone)
         {
-        case ATCA_ZONE_CONFIG: *size = 88; break;
-        case ATCA_ZONE_OTP:    *size = 64; break;
-        case ATCA_ZONE_DATA:   *size = 32; break;
-        default: status = ATCA_BAD_PARAM; break;
+            case ATCA_ZONE_CONFIG:
+                *size = 88;
+                break;
+            case ATCA_ZONE_OTP:
+                *size = 64;
+                break;
+            case ATCA_ZONE_DATA:
+                *size = 32;
+                break;
+            default:
+                status = ATCA_BAD_PARAM;
+                break;
         }
     }
     else
     {
         switch (zone)
         {
-        case ATCA_ZONE_CONFIG: *size = 128; break;
-        case ATCA_ZONE_OTP:    *size = 64; break;
-        case ATCA_ZONE_DATA:
-            if (slot < 8)
-            {
-                *size = 36;
-            }
-            else if (slot == 8)
-            {
-                *size = 416;
-            }
-            else if (slot < 16)
-            {
-                *size = 72;
-            }
-            else
-            {
+            case ATCA_ZONE_CONFIG:
+                *size = 128;
+                break;
+            case ATCA_ZONE_OTP:
+                *size = 64;
+                break;
+            case ATCA_ZONE_DATA:
+                if (slot < 8)
+                {
+                    *size = 36;
+                }
+                else if (slot == 8)
+                {
+                    *size = 416;
+                }
+                else if (slot < 16)
+                {
+                    *size = 72;
+                }
+                else
+                {
+                    status = ATCA_BAD_PARAM;
+                }
+                break;
+            default:
                 status = ATCA_BAD_PARAM;
-            }
-            break;
-        default: status = ATCA_BAD_PARAM; break;
+                break;
         }
     }
 
