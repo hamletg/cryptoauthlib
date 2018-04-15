@@ -40,6 +40,8 @@
 #ifndef ATCA_EXECUTION_H
 #define ATCA_EXECUTION_H
 
+#include "cryptoauthlib/cryptoauthlib_defs.h"
+
 #include "atca_status.h"
 #include "atca_command.h"
 #include "atca_device.h"
@@ -62,12 +64,12 @@ typedef struct
 {
     uint8_t  opcode;
     uint16_t execution_time_msec;
-}device_execution_time_t;
+} device_execution_time_t;
 
 ATCA_STATUS atGetExecTime(uint8_t opcode, ATCACommand ca_cmd);
 #endif
 
-ATCA_STATUS atca_execute_command(ATCAPacket* packet, ATCADevice device);
+CRYPTOAUTHLIB_API ATCA_STATUS atca_execute_command(ATCAPacket* packet, ATCADevice device);
 
 #ifdef __cplusplus
 }
