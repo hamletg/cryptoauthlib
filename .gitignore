@@ -48,3 +48,7 @@ local.properties
 *.o
 
 .vs
+
+/lib/
+/project/build/vc14_dll/cryptoauthlib/
+/project/msvc14/*.VC.db
